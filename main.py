@@ -286,8 +286,25 @@ async def publish_stories(brand: BrandConfig, s3cfg: S3Config):
 # Scheduler
 # ----------------------------
 def parse_cron(expr: str) -> CronTrigger:
-    minute, hour, day, month, dow = expr.split()
-    return CronTrigger(minute=minute, hour=hour, day=day, month=month, day_of_week=dow)
+    parts = expr.strip().split()
+
+    if len(parts) == 4:
+        # если забыли минуты — ставим 0
+        minute = "0"
+        hour, day, month, dow = parts
+    elif len(parts) == 5:
+        minute, hour, day, month, dow = parts
+    else:
+        raise ValueError(f"Invalid cron format: '{expr}' (got {len(parts)} parts)")
+
+    return CronTrigger(
+        minute=minute,
+        hour=hour,
+        day=day,
+        month=month,
+        day_of_week=dow,
+    )
+
 
 def load_config(path: str) -> Tuple[S3Config, OpenAIConfig, List[BrandConfig]]:
     with open(path, "r", encoding="utf-8") as f:
