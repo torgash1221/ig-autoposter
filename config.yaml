@@ -6,23 +6,13 @@ s3:
   secret_access_key: XXX
   state_key: used_content.json
 
-openai:
-  enabled: true
-  api_key: sk-***
-  model: gpt-4o-mini
-  max_caption_chars: 1200
-
 brands:
   - brand_key: ustritso
     instagram:
-      name: УстриЦО
       ig_user_id: "1789********"
       access_token: EAAG****
     s3_prefix_posts: projects/ustritso/posts
     s3_prefix_stories: projects/ustritso/stories
-    language: uk
-    tone: "тепло, преміально, гастрономічно"
-    hashtags: ["#УстриЦО", "#устриці", "#вино"]
     schedule_posts:
       - "0 18 * * 2,5"
     schedule_stories:
