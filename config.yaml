@@ -1,0 +1,30 @@
+s3:
+  endpoint_url: https://s3.your-provider.com
+  region: us-east-1
+  bucket: instagram-content
+  access_key_id: XXX
+  secret_access_key: XXX
+  state_key: used_content.json
+
+openai:
+  enabled: true
+  api_key: sk-***
+  model: gpt-4o-mini
+  max_caption_chars: 1200
+
+brands:
+  - brand_key: ustritso
+    instagram:
+      name: УстриЦО
+      ig_user_id: "1789********"
+      access_token: EAAG****
+    s3_prefix_posts: projects/ustritso/posts
+    s3_prefix_stories: projects/ustritso/stories
+    language: uk
+    tone: "тепло, преміально, гастрономічно"
+    hashtags: ["#УстриЦО", "#устриці", "#вино"]
+    schedule_posts:
+      - "0 18 * * 2,5"
+    schedule_stories:
+      - "0 11,15,20 * *"
+    stories_per_run: 1
