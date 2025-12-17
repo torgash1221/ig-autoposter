@@ -1,94 +1,71 @@
+import aiosqlite
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from datetime import datetime
-import aiosqlite
+from zoneinfo import ZoneInfo
 
-from db import DB_NAME, get_schedule, mark_used
+from db import DB_NAME
 from content_picker import pick_content
-from config import BUSINESSES
+from config import TIMEZONE, BUSINESSES
+from handlers.keyboards import publish_keyboard
 
-scheduler = AsyncIOScheduler()
+scheduler = AsyncIOScheduler(timezone=ZoneInfo(TIMEZONE))
 
 
-async def send_story(bot, chat_id: int, business: str):
-    """
-    Выбирает контент и отправляет сторис в Telegram
-    """
+async def send_story(bot, chat_id, business):
     content_id = await pick_content(business)
     if not content_id:
-        await bot.send_message(
-            chat_id,
-            f"❌ Нет контента для {BUSINESSES.get(business, business)}"
-        )
+        await bot.send_message(chat_id, f"❌ Нет контента для {BUSINESSES[business]}")
         return
 
     async with aiosqlite.connect(DB_NAME) as db:
-        row = await db.execute_fetchone(
-            "SELECT file_id FROM content WHERE id=?",
+        cursor = await db.execute(
+            "SELECT id, file_id FROM content WHERE id=?",
             (content_id,)
         )
+        row = await cursor.fetchone()
 
-    if not row:
-        await bot.send_message(chat_id, "❌ Контент не найден в БД")
-        return
-
-    file_id = row[0]
-
-    await mark_used(content_id)
+        await db.execute(
+            """
+            UPDATE content
+            SET used_count = used_count + 1,
+                last_used = ?
+            WHERE id = ?
+            """,
+            (datetime.utcnow().isoformat(), content_id)
+        )
+        await db.commit()
 
     await bot.send_photo(
-        chat_id,
-        file_id,
+        chat_id=chat_id,
+        photo=row[1],
         caption=(
             f"📢 Пора публиковать сторис\n"
-            f"Бизнес: {BUSINESSES.get(business, business)}\n"
-            f"⏰ {datetime.now().strftime('%H:%M')}"
+            f"Бизнес: {BUSINESSES[business]}"
         ),
-        reply_markup={
-            "inline_keyboard": [
-                [
-                    {
-                        "text": "📲 Опубликовать сторис",
-                        "url": "https://www.instagram.com"
-                    }
-                ],
-                [
-                    {
-                        "text": "🔁 Заменить",
-                        "callback_data": f"replace:{business}"
-                    },
-                    {
-                        "text": "✅ Выложено",
-                        "callback_data": f"published:{business}:{content_id}"
-                    }
-                ]
-            ]
-        }
+        reply_markup=publish_keyboard(business, content_id)
     )
 
 
-def add_job(bot, chat_id: int, business: str, time_str: str):
-    """
-    Добавляет cron-задачу
-    time_str = '18:00'
-    """
+def add_job(bot, chat_id, business, time_str):
     hour, minute = map(int, time_str.split(":"))
 
     scheduler.add_job(
         send_story,
-        trigger="cron",
+        "cron",
         hour=hour,
         minute=minute,
         args=[bot, chat_id, business],
-        id=f"{business}_{time_str}",
+        id=f"{business}_{hour}_{minute}",
         replace_existing=True
     )
 
 
-async def load_schedule(bot, chat_id: int):
-    """
-    Загружает расписание из БД и регистрирует задачи
-    """
-    rows = await get_schedule()
+async def load_schedule(bot, chat_id):
+    async with aiosqlite.connect(DB_NAME) as db:
+        cursor = await db.execute(
+            "SELECT business, time FROM schedule"
+        )
+        rows = await cursor.fetchall()
 
     for business, time_str in rows:
         add_job(bot, chat_id, business, time_str)
