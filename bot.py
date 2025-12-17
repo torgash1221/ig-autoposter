@@ -3,6 +3,11 @@ from aiogram import Bot, Dispatcher
 from config import BOT_TOKEN
 from db import init_db
 from handlers import upload, reports
+from handlers import upload, reports, publish
+
+dp.include_router(upload.router)
+dp.include_router(reports.router)
+dp.include_router(publish.router)
 
 async def main():
     bot = Bot(BOT_TOKEN)
