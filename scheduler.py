@@ -75,4 +75,7 @@ async def load_schedule(bot, chat_id):
 def start_scheduler():
     scheduler.remove_all_jobs()   # 🔥 УБИВАЕМ ВСЕ СТАРЫЕ JOB
     scheduler.start()
+if not scheduler.running:
+    scheduler.start()
+
 
