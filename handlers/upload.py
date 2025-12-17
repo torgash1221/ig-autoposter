@@ -9,6 +9,15 @@ from handlers.state import user_business_state
 router = Router()
 
 
+def parse_tags(text: str) -> str:
+    if not text:
+        return ""
+
+    text = text.replace("#", "")
+    tags = [t.strip().lower() for t in text.split(",") if t.strip()]
+    return ",".join(tags)
+
+
 @router.message(F.photo)
 async def upload_photo(message: Message):
     user_id = message.from_user.id
@@ -19,14 +28,19 @@ async def upload_photo(message: Message):
         return
 
     file_id = message.photo[-1].file_id
+    tags = parse_tags(message.caption or "")
 
     async with aiosqlite.connect(DB_NAME) as db:
         await db.execute(
-            "INSERT INTO content (business, file_id) VALUES (?, ?)",
-            (business, file_id)
+            """
+            INSERT INTO content (business, file_id, tags)
+            VALUES (?, ?, ?)
+            """,
+            (business, file_id, tags)
         )
         await db.commit()
 
     await message.answer(
-        f"✅ Контент сохранён для {BUSINESSES[business]}"
+        f"✅ Контент сохранён для {BUSINESSES[business]}\n"
+        f"🏷 Теги: {tags or 'без тегов'}"
     )
