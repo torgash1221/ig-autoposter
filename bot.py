@@ -23,27 +23,22 @@ logging.getLogger("aiogram").setLevel(logging.DEBUG)
 async def main():
     bot = Bot(
         BOT_TOKEN,
-        default=DefaultBotProperties(
-            parse_mode=ParseMode.HTML
-        )
+        default=DefaultBotProperties(parse_mode=ParseMode.HTML)
     )
 
     dp = Dispatcher()
 
-    # 🔥 РЕГИСТРАЦИЯ РОУТЕРОВ — ТОЛЬКО ТУТ
+    # 🔥 ВАЖНО: РОВНО ОДИН Dispatcher И ТОЛЬКО ТУТ
     dp.include_router(schedule_router)
     dp.include_router(upload_router)
     dp.include_router(gallery_router)
     dp.include_router(publish_router)
 
-    # 🗄 DB
     await init_db()
-
-    # ⏰ Scheduler
     await load_schedule(bot, OWNER_CHAT_ID)
     start_scheduler()
 
-    print("🤖 Бот запущен и scheduler активен")
+    print("🤖 Бот запущен")
 
     await dp.start_polling(bot)
 
