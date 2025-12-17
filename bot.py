@@ -2,11 +2,15 @@ import asyncio
 from aiogram import Bot, Dispatcher
 from aiogram.enums import ParseMode
 
-from config import BOT_TOKEN
+from config import BOT_TOKEN, OWNER_CHAT_ID
 from db import init_db
 from scheduler import start_scheduler, load_schedule
 
-from handlers import upload_router, publish_router
+from handlers import (
+    upload_router,
+    publish_router,
+    schedule_router
+)
 
 
 async def main():
@@ -16,16 +20,16 @@ async def main():
     # 🔌 handlers
     dp.include_router(upload_router)
     dp.include_router(publish_router)
+    dp.include_router(schedule_router)
 
     # 🗄 DB
     await init_db()
 
     # ⏰ Scheduler
-    OWNER_CHAT_ID = 123456789  # ← ВСТАВЬ СВОЙ chat_id
     await load_schedule(bot, OWNER_CHAT_ID)
     start_scheduler()
 
-    print("🤖 Бот запущен")
+    print("🤖 Бот запущен и scheduler активен")
 
     await dp.start_polling(bot)
 
