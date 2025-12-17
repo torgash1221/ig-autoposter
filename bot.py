@@ -3,6 +3,15 @@ from aiogram import Bot, Dispatcher
 from aiogram.enums import ParseMode
 from aiogram.client.default import DefaultBotProperties
 
+import logging
+
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s | %(levelname)s | %(name)s | %(message)s"
+)
+logging.getLogger("aiogram").setLevel(logging.DEBUG)
+
+
 from config import BOT_TOKEN, OWNER_CHAT_ID
 from db import init_db
 from scheduler import start_scheduler, load_schedule
