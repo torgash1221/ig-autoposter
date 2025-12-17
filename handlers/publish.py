@@ -1,11 +1,12 @@
 from aiogram import Router, F
-from aiogram.types import CallbackQuery
+from aiogram.types import CallbackQuery, InputMediaPhoto
 import aiosqlite
 from datetime import datetime
 
 from db import DB_NAME
 from content_picker import pick_content
 from config import BUSINESSES
+from handlers.keyboards import publish_keyboard  # если вынес клавиатуру
 
 router = Router()
 
@@ -22,7 +23,7 @@ async def replace_content(callback: CallbackQuery):
 
     async with aiosqlite.connect(DB_NAME) as db:
         row = await db.execute_fetchone(
-            "SELECT file_id FROM content WHERE id=?",
+            "SELECT id, file_id FROM content WHERE id=?",
             (content_id,)
         )
 
@@ -38,18 +39,33 @@ async def replace_content(callback: CallbackQuery):
         await db.commit()
 
     await callback.message.edit_media(
-        media={
-            "type": "photo",
-            "media": row[0],
-            "caption": (
+        media=InputMediaPhoto(
+            media=row[1],
+            caption=(
                 f"📢 Пора публиковать сторис\n"
                 f"Бизнес: {BUSINESSES[business]}"
             )
-        },
-        reply_markup=callback.message.reply_markup
+        ),
+        reply_markup=publish_keyboard(business, content_id)
     )
 
     await callback.answer("🔁 Контент заменён")
+
+
+# 🗑 УДАЛИТЬ КОНТЕНТ
+@router.callback_query(F.data.startswith("delete:"))
+async def delete_content(callback: CallbackQuery):
+    content_id = int(callback.data.split(":")[1])
+
+    async with aiosqlite.connect(DB_NAME) as db:
+        await db.execute(
+            "DELETE FROM content WHERE id=?",
+            (content_id,)
+        )
+        await db.commit()
+
+    await callback.message.edit_caption("🗑 Контент удалён")
+    await callback.answer("Удалено")
 
 
 # ✅ ОТМЕТИТЬ КАК ВЫЛОЖЕНО
