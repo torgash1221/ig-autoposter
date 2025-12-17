@@ -10,6 +10,9 @@ router = Router()
 
 TIME_PATTERN = re.compile(r"^\d{2}:\d{2}$")
 
+# ✅ временное состояние: user_id → business
+schedule_state = {}
+
 
 @router.message(F.text == "/schedule")
 async def schedule_start(message: Message):
@@ -33,20 +36,21 @@ async def schedule_business(message: Message):
         await message.answer("❌ Неизвестный бизнес")
         return
 
+    # ✅ сохраняем бизнес во временный state
+    schedule_state[message.from_user.id] = business
+
     await message.answer(
         f"⏰ Введи время для {BUSINESSES[business]} в формате HH:MM\n\n"
         f"Пример: 18:00"
     )
-
-    # сохраняем выбранный бизнес во временный state
-    message.bot_data[message.from_user.id] = business
 
 
 @router.message()
 async def schedule_time(message: Message):
     user_id = message.from_user.id
 
-    if user_id not in message.bot_data:
+    # ✅ если пользователь не в режиме ввода времени — выходим
+    if user_id not in schedule_state:
         return
 
     time_str = message.text.strip()
@@ -55,12 +59,12 @@ async def schedule_time(message: Message):
         await message.answer("❌ Неверный формат. Пример: 18:00")
         return
 
-    business = message.bot_data.pop(user_id)
+    business = schedule_state.pop(user_id)
 
-    # сохраняем в БД
+    # 💾 сохраняем в БД
     await add_schedule(business, time_str)
 
-    # добавляем задачу сразу
+    # ⏰ добавляем задачу сразу
     add_job(
         bot=message.bot,
         chat_id=OWNER_CHAT_ID,
@@ -68,7 +72,10 @@ async def schedule_time(message: Message):
         time_str=time_str
     )
 
+    # ✅ ВОТ ТО САМОЕ ПОДТВЕРЖДЕНИЕ
     await message.answer(
-        f"✅ Расписание добавлено:\n"
-        f"{BUSINESSES[business]} — {time_str}"
+        f"✅ Расписание сохранено\n\n"
+        f"{BUSINESSES[business]}\n"
+        f"⏰ Время: {time_str}\n"
+        f"📅 Каждый день"
     )
