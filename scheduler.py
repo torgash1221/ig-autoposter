@@ -24,6 +24,7 @@ async def send_story(bot, chat_id, business):
         )
         row = await cursor.fetchone()
 
+
         await db.execute(
             """
             UPDATE content
