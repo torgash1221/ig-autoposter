@@ -1,3 +1,4 @@
+print("🔥🔥🔥 UPLOAD.PY LOADED 🔥🔥🔥")
 from aiogram import Router, F
 from aiogram.types import Message
 import aiosqlite
