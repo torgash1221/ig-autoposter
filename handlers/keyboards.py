@@ -1,6 +1,24 @@
 # handlers/keyboards.py
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 
+def gallery_keyboard():
+    return InlineKeyboardMarkup(
+        inline_keyboard=[
+            [
+                InlineKeyboardButton(
+                    text="🦪 УстриЦО",
+                    callback_data="gallery:ustritso"
+                )
+            ],
+            [
+                InlineKeyboardButton(
+                    text="🍣 My Thai",
+                    callback_data="gallery:mythai"
+                )
+            ]
+        ]
+    )
+
 
 def publish_keyboard(business: str, content_id: int):
     return InlineKeyboardMarkup(inline_keyboard=[
