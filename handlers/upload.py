@@ -1,6 +1,8 @@
 print("🔥🔥🔥 UPLOAD.PY LOADED 🔥🔥🔥")
-from aiogram import Router, F
+
+from aiogram import Router
 from aiogram.types import Message
+from aiogram.filters import Command
 import aiosqlite
 
 from db import DB_NAME
@@ -18,23 +20,36 @@ def parse_tags(text: str) -> str:
     return ",".join(tags)
 
 
-# ===== ВЫБОР БИЗНЕСА =====
+# =========================
+# ВЫБОР БИЗНЕСА
+# =========================
 
-@router.message(F.text.startswith("/upload_mythai"))
+@router.message(Command("upload_mythai"))
 async def upload_mythai(message: Message):
     user_business_state[message.from_user.id] = "mythai"
     await message.answer("📤 Загружай контент для 🍣 My Thai")
 
 
-@router.message(F.text.startswith("/upload_ustritso"))
+@router.message(Command("upload_ustritso"))
 async def upload_ustritso(message: Message):
     user_business_state[message.from_user.id] = "ustritso"
     await message.answer("📤 Загружай контент для 🦪 УстриЦО")
 
 
-# ===== ЗАГРУЗКА ФОТО =====
+@router.message(Command("upload"))
+async def upload_help(message: Message):
+    await message.answer(
+        "📤 Выбери бизнес для загрузки контента:\n\n"
+        "/upload_ustritso — 🦪 УстриЦО\n"
+        "/upload_mythai — 🍣 My Thai"
+    )
 
-@router.message(F.photo)
+
+# =========================
+# ЗАГРУЗКА ФОТО
+# =========================
+
+@router.message(lambda m: m.photo)
 async def upload_photo(message: Message):
     user_id = message.from_user.id
     business = user_business_state.get(user_id)
@@ -42,8 +57,8 @@ async def upload_photo(message: Message):
     if not business:
         await message.answer(
             "❗ Сначала выбери бизнес:\n"
-            "/upload_mythai\n"
-            "/upload_ustritso"
+            "/upload_ustritso\n"
+            "/upload_mythai"
         )
         return
 
