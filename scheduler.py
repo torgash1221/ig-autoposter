@@ -14,17 +14,30 @@ scheduler = AsyncIOScheduler(timezone=ZoneInfo(TIMEZONE))
 async def send_story(bot, chat_id, business):
     content_id = await pick_content(business)
     if not content_id:
-        await bot.send_message(chat_id, f"❌ Нет контента для {BUSINESSES[business]}")
+        await bot.send_message(
+            chat_id,
+            f"❌ Нет контента для {BUSINESSES[business]}"
+        )
         return
 
     async with aiosqlite.connect(DB_NAME) as db:
+        # ✅ получаем контент
         cursor = await db.execute(
-            "SELECT id, file_id FROM content WHERE id=?",
+            "SELECT file_id FROM content WHERE id = ?",
             (content_id,)
         )
         row = await cursor.fetchone()
 
+        if not row:
+            await bot.send_message(
+                chat_id,
+                f"❌ Контент не найден (id={content_id})"
+            )
+            return
 
+        file_id = row[0]
+
+        # ✅ обновляем статистику
         await db.execute(
             """
             UPDATE content
@@ -36,9 +49,10 @@ async def send_story(bot, chat_id, business):
         )
         await db.commit()
 
+    # ✅ отправляем сторис
     await bot.send_photo(
         chat_id=chat_id,
-        photo=row[1],
+        photo=file_id,
         caption=(
             f"📢 Пора публиковать сторис\n"
             f"Бизнес: {BUSINESSES[business]}"
