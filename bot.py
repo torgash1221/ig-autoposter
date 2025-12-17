@@ -29,9 +29,11 @@ async def main():
     dp = Dispatcher()
 
     # handlers
+
+    dp.include_router(schedule_router)   # 🔥 ПЕРВЫМ
     dp.include_router(upload_router)
     dp.include_router(publish_router)
-    dp.include_router(schedule_router)
+
 
     # DB
     await init_db()
