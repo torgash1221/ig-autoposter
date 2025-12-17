@@ -46,7 +46,7 @@ async def schedule_business(message: Message):
         return
 
     schedule_state[message.from_user.id] = business
-    user_business_state[message.from_user.id] = business  # 🔥 ВАЖНО
+    user_business_state[message.from_user.id] = business
 
     await message.answer(
         f"⏰ Введи время для {BUSINESSES[business]} в формате HH:MM\n\n"
