@@ -1,3 +1,4 @@
+
 from aiogram import Router, F
 from aiogram.types import Message
 import re
@@ -5,6 +6,7 @@ import re
 from db import add_schedule
 from scheduler import add_job
 from config import BUSINESSES, OWNER_CHAT_ID
+logging.getLogger("aiogram").setLevel(logging.DEBUG)
 
 router = Router()
 
