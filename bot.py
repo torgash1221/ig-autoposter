@@ -2,6 +2,13 @@ import asyncio
 from aiogram import Bot, Dispatcher
 from aiogram.enums import ParseMode
 from aiogram.client.default import DefaultBotProperties
+from handlers import upload_router, publish_router, schedule_router
+from handlers.gallery import router as gallery_router
+
+dp.include_router(schedule_router)
+dp.include_router(upload_router)
+dp.include_router(gallery_router)
+dp.include_router(publish_router)
 
 import logging
 
